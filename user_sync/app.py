@@ -230,7 +230,16 @@ def init(ctx):
     sync = 'user-sync-config.yml'
     umapi = 'connector-umapi.yml'
     ldap = 'connector-ldap.yml'
-    ctx.forward(example_config, root=sync, umapi=umapi, ldap=ldap)
+    okta = 'connector-okta.yml'
+    csv = 'connector-csv.yml'
+    console = 'connector-adobe-console.yml'
+    extension = 'extension-config.yml'
+    remove_list = 'remove-list.csv'
+    users_file_custom = 'users-file-with-custom-attributes-and-mappings.csv'
+    users_file = 'users-file.csv'
+    ctx.forward(example_config, root=sync, umapi=umapi, ldap=ldap,
+                okta=okta, csv=csv, console=console, extension=extension, 
+                remove_list=remove_list, users_file_custom=users_file_custom, users_file=users_file)
 
 
 @main.command(short_help="Generate invocation scripts")
@@ -261,21 +270,34 @@ def shell_scripts(platform):
               prompt='UMAPI Config Filename', default='connector-umapi.yml')
 @click.option('--ldap', help="Filename of LDAP credential config file",
               prompt='LDAP Config Filename', default='connector-ldap.yml')
-def example_config(**kwargs):
+@click.option('--examples', type=bool, help="Generate all or selected config files", required=False, default=None)
+def example_config(examples=False, **kwargs):
     """Generate example configuration files"""
     res_files = {
         'root': os.path.join('examples', 'user-sync-config.yml'),
         'umapi': os.path.join('examples', 'connector-umapi.yml'),
         'ldap': os.path.join('examples', 'connector-ldap.yml'),
+        'okta': os.path.join('examples', 'config files - basic', 'connector-okta.yml'),
+        'csv': os.path.join('examples', 'config files - basic', 'connector-csv.yml'),
+        'console': os.path.join('examples', 'config files - basic', 'connector-adobe-console.yml'),
+        'extension': os.path.join('examples', 'config files - custom attributes and mappings', 'extension-config.yml'),
+        'remove_list': os.path.join('examples', 'csv inputs - user and remove lists', 'remove-list.csv'),
+        'users_file_custom': os.path.join('examples', 'csv inputs - user and remove lists', 'users-file-with-custom-attributes-and-mappings.csv'),
+        'users_file': os.path.join('examples', 'csv inputs - user and remove lists', 'users-file.csv')
     }
 
-    for k, fname in kwargs.items():
-        target = Path.cwd() / fname
+    if not examples:
+        res_files = {config: kwargs[config] for config in res_files
+                     if config in kwargs}
+
+    for k, fname in res_files.items():
+        target = Path(fname)
         assert k in res_files, "Invalid option specified"
         res_file = user_sync.resource.get_resource(res_files[k])
         assert res_file is not None, "Resource file '{}' not found".format(res_files[k])
         if target.exists() and not click.confirm('\nWarning - file already exists: \n{}\nOverwrite?'.format(target)):
             continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
         click.echo("Generating file '{}'".format(fname))
         with open(res_file, 'r') as file:
             content = file.read()
@@ -287,14 +309,39 @@ def example_config(**kwargs):
 @click.help_option('-h', '--help')
 @click.option('--filename', help="Filename of Sign Sync config",
               prompt='Sign Sync Config Filename', default='connector-sign-sync.yml')
-def example_config_sign(filename):
+@click.option('--root', help="Filename of root sign sync config file",
+              prompt='Main Config Filename', default='sign-sync-config.yml')
+@click.option('--sign', help="Filename of Sign Sync config",
+              prompt='Sign Sync Config Filename', default='connector-sign.yml')
+@click.option('--ldap', help="Filename of LDAP credential config file",
+              prompt='LDAP Config Filename', default='connector-ldap.yml')
+@click.option('--examples', type=bool, help="Generate all or selected config files", 
+              required=False, default=None)
+def example_config_sign(examples=False, **kwargs):
     """Generate Sign Sync Config"""
-    res_filename = os.path.join('examples', 'connector-sign-sync.yml')
+    res_files = {
+        'root': os.path.join('examples', 'sign', 'sign-sync-config.yml'),
+        'sign': os.path.join('examples', 'sign', 'connector-sign.yml'),
+        'ldap': os.path.join('examples', 'sign', 'connector-ldap.yml'),
+    }
 
-    res_file = user_sync.resource.get_resource(res_filename)
-    assert res_file is not None, "Resource file '{}' not found".format(res_filename)
-    click.echo("Generating file '{}'".format(filename))
-    shutil.copy(res_file, filename)
+    if not examples:
+        res_files = {config: kwargs[config] for config in res_files
+                     if config in kwargs}
+        
+    for k, fname in res_files.items():
+        target = Path.cwd() / fname
+        assert k in res_files, "Invalid option specified"
+        res_file = user_sync.resource.get_resource(res_files[k])
+        assert res_file is not None, "Resource file '{}' not found".format(res_files[k])
+        if target.exists() and not click.confirm('\nWarning - file already exists: \n{}\nOverwrite?'.format(target)):
+            continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        click.echo("Generating file '{}'".format(fname))
+        with open(res_file, 'r') as file:
+            content = file.read()
+        with open(target, 'w') as file:
+            file.write(content)
 
 
 @main.command()
