@@ -796,11 +796,13 @@ class RuleProcessor(object):
                 groups_to_remove = umapi_info.get_mapped_groups() - groups_to_add
                 commands.remove_groups(groups_to_remove)
             commands.add_groups(groups_to_add)
+        user_key_log_entry = commands.identity_type.join(',').join(
+            commands.email if commands.email is not None else commands.username)
         if umapi_connector.trusted:
-            self.logger.info('Adding user to umapi %s with user key: %s', umapi_connector.name, user_key)
+            self.logger.info('Adding user to umapi %s with user key: %s', umapi_connector.name, user_key_log_entry)
             self.secondary_users_created.add(user_key)
         else:
-            self.logger.info('Creating user with user key: %s', user_key)
+            self.logger.info('Creating user with user key: %s', user_key_log_entry)
             self.primary_users_created.add(user_key)
         post_sync_user = {
             'type': directory_user['identity_type'],
