@@ -109,7 +109,7 @@ class CSVAdapter:
                     unrecognized_column_names = [column_name for column_name in reader.fieldnames
                                                  if column_name not in recognized_column_names]
                     if len(unrecognized_column_names) > 0 and logger is not None:
-                        logger.warn("In file '%s': unrecognized column names: %s", file_path, unrecognized_column_names)
+                        logger.warning("In file '%s': unrecognized column names: %s", file_path, unrecognized_column_names)
                 for row in reader:
                     row.pop(None, None)
                     if is_py2():

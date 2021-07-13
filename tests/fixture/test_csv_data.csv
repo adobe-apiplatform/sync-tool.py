@@ -1,0 +1,12 @@
+firstname,lastname,email,country,groups,type,username,domain,untracked,extraattribute
+Dark,Wizard,dwizardexample.com,US,Daleks_Info,federatedID
+,Yennant,dYennant@example.com,US,Daleks_Info,federatedID
+Debra,,debmorgan@example.com,US,Daleks_Info,federatedID
+Park,Wizard,pwizard@example.com,US,Daleks_Info,federatedID,pwizard@example.com,example.com,Adobe
+Shark,Wizard,swizard@example.com,US,Daleks_Info,federatedID,swizard@example.com,example.com,untracked,Adobe
+John,Smith,jsmith@example.com,US,AdobeCC-All,enterpriseID,,
+Jane,Doe,jdoe@example.com,US,AdobeCC-All,federatedID,,
+Richard,Roe,rroe@example.com,US,AdobeCC-All,,,
+field1,field2,field3,field4,field5,field6,field7,field8,field9,field10,field11,field12,field13,field14
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,Dorathy,,,,,,
