@@ -599,7 +599,7 @@ class LDAPValueFormatter(object):
         attribute_values = attributes.get(attribute_name)
         if attribute_values:
             try:
-                if isinstance(attribute_values, six.string_types):
+                if isinstance(attribute_values, str):
                     return attribute_values
                 else:
                     if first_only:

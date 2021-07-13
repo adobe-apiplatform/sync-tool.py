@@ -29,7 +29,6 @@ import yaml
 
 import user_sync.helper
 import user_sync.identity_type
-import user_sync.port
 import user_sync.rules
 from user_sync import flags
 from user_sync.error import AssertionException
@@ -282,7 +281,7 @@ class ConfigLoader(object):
         secondary_config_sources = {}
         primary_config_sources = []
         for item in umapi_config:
-            if isinstance(item, six.string_types):
+            if isinstance(item, str):
                 if secondary_config_sources:
                     # if we see a string after a dict, the user has done something wrong, and we fail.
                     raise AssertionException("Secondary umapi configuration found with no prefix: " + item)
@@ -431,7 +430,7 @@ class ConfigLoader(object):
     def as_list(value):
         if value is None:
             return []
-        elif isinstance(value, user_sync.port.list_type):
+        elif isinstance(value, list):
             return value
         return [value]
 
@@ -657,8 +656,8 @@ class ObjectConfig(object):
         return AssertionException("%s in: %s" % (message, self.get_full_scope()))
 
     def describe_types(self, types_to_describe):
-        if types_to_describe == six.string_types:
-            result = self.describe_types(user_sync.port.string_type)
+        if types_to_describe == str:
+            result = self.describe_types(str)
         elif isinstance(types_to_describe, tuple):
             result = []
             for type_to_describe in types_to_describe:
@@ -765,19 +764,19 @@ class DictConfig(ObjectConfig):
         """
         :rtype: basestring
         """
-        return self.get_value(key, six.string_types, none_allowed)
+        return self.get_value(key, str, none_allowed)
 
     def get_int(self, key, none_allowed=False):
         """
         :rtype: int
         """
-        return self.get_value(key, user_sync.port.integer_type, none_allowed)
+        return self.get_value(key, int, none_allowed)
 
     def get_bool(self, key, none_allowed=False):
         """
         :rtype: bool
         """
-        return self.get_value(key, user_sync.port.boolean_type, none_allowed)
+        return self.get_value(key, bool, none_allowed)
 
     def get_list(self, key, none_allowed=False):
         """
@@ -1060,7 +1059,7 @@ class ConfigFileLoader:
         :param must_exist: whether there must be a value
         :param can_have_subdict: whether the value can be a tagged string
         """
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             return cls.relative_path(val, must_exist)
         elif isinstance(val, list):
             vals = []
@@ -1077,7 +1076,7 @@ class ConfigFileLoader:
         """
         returns an absolute path that is resolved relative to the file being loaded
         """
-        if not isinstance(val, six.string_types):
+        if not isinstance(val, str):
             raise AssertionException("Expected pathname for setting %s in config file %s" %
                                      (cls.key_path, cls.filename))
         if val.startswith('$(') and val.endswith(')'):
@@ -1107,21 +1106,21 @@ class OptionsBuilder(object):
         :type key: str
         :type default_value: bool
         """
-        self.set_value(key, user_sync.port.boolean_type, default_value)
+        self.set_value(key, bool, default_value)
 
     def set_int_value(self, key, default_value):
         """
         :type key: str
         :type default_value: int
         """
-        self.set_value(key, user_sync.port.integer_type, default_value)
+        self.set_value(key, int, default_value)
 
     def set_string_value(self, key, default_value):
         """
         :type key: str
         :type default_value: Optional(str)
         """
-        self.set_value(key, six.string_types, default_value)
+        self.set_value(key, str, default_value)
 
     def set_dict_value(self, key, default_value):
         """
@@ -1138,7 +1137,7 @@ class OptionsBuilder(object):
         self.options[key] = value
 
     def require_string_value(self, key):
-        return self.require_value(key, six.string_types)
+        return self.require_value(key, str)
 
     def require_value(self, key, allowed_types):
         config = self.default_config
