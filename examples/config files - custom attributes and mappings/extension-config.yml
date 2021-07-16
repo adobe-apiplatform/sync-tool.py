@@ -49,12 +49,16 @@ extended_adobe_groups:
 #                         # out: Adobe-side dashboard groups as potentially changed by hook code
 #     hook_storage        # for exclusive use by hook code: initialized to None; persists across per-user calls
 #     logger              # an object of type logging.logger which outputs to the console and/or file log
-#
+#     skip_user()         # If you want to remove any user from the user sync process completely, please add the
+                          # validations and call skip_user(), so that users will be skipped from sync if the
+                          # validations are successful
 after_mapping_hook: |
   bc = source_attributes.get('bc')
   subco = source_attributes.get('subco')
   if bc is not None:
     target_attributes['country'] = bc[0:2]
+  if subco == 'Company 3':
+    skip_user()
   if subco == 'Company 1':
     target_groups.add('Company 1 Users')
   elif subco == 'Company 2':

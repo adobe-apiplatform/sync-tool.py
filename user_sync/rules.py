@@ -361,6 +361,7 @@ class RuleProcessor(object):
         extended_attributes = options.get('extended_attributes')
 
         directory_user_by_user_key = self.directory_user_by_user_key
+        filtered_directory_user_by_user_key = self.filtered_directory_user_by_user_key
 
         directory_groups = set(six.iterkeys(mappings)) if self.will_process_groups() else set()
         if directory_group_filter is not None:
@@ -368,7 +369,7 @@ class RuleProcessor(object):
         directory_users = directory_connector.load_users_and_groups(groups=directory_groups,
                                                                     extended_attributes=extended_attributes,
                                                                     all_users=directory_group_filter is None)
-
+        self.skipped_user_count = 0
         for directory_user in directory_users:
             user_key = self.get_directory_user_key(directory_user)
             if not user_key:
@@ -397,6 +398,11 @@ class RuleProcessor(object):
 
             # only if there actually is hook code: set up rest of hook scope, invoke hook, update user attributes
             if options['after_mapping_hook'] is not None:
+                def user_skip_callback():
+                    self.get_umapi_info(PRIMARY_UMAPI_NAME).get_desired_groups_by_user_key().pop(user_key)
+                    self.directory_user_by_user_key.pop(user_key)
+                    self.filtered_directory_user_by_user_key.pop(user_key, None)
+                    self.skipped_user_count += 1
                 self.after_mapping_hook_scope['source_attributes'] = directory_user['source_attributes'].copy()
 
                 target_attributes = dict()
@@ -409,10 +415,12 @@ class RuleProcessor(object):
                 self.after_mapping_hook_scope['target_attributes'] = target_attributes
 
                 # invoke the customer's hook code
+                self.after_mapping_hook_scope['skip_user'] = user_skip_callback
                 self.log_after_mapping_hook_scope(before_call=True)
                 exec(options['after_mapping_hook'], self.after_mapping_hook_scope)
                 self.log_after_mapping_hook_scope(after_call=True)
-
+                if user_key not in self.directory_user_by_user_key:
+                    continue
                 # copy modified attributes back to the user object
                 directory_user.update(self.after_mapping_hook_scope['target_attributes'])
 
@@ -443,6 +451,8 @@ class RuleProcessor(object):
                     umapi_info.add_desired_group_for(user_key, rename_group)
 
         self.logger.debug('Total directory users after filtering: %d', len(self.filtered_directory_user_by_user_key))
+        if self.skipped_user_count > 0:
+            self.logger.info('{} users were skipped for sync by extension config rules'.format(self.skipped_user_count))
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug('Group work list: %s', dict([(umapi_name, umapi_info.get_desired_groups_by_user_key())
                                                            for umapi_name, umapi_info
